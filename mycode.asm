@@ -2,13 +2,12 @@
 .stack 100h
 
 .data
-; every name and disease is exactly 10 bytes, padded with '$'
-names    db 'Panadol$$$','Brufen$$$$','Amoxil$$$$'
+names    db 'Panadol$$$','Brufen$$$$','Amoxil$$$$' ;extra $ make each work 10 bytes
 diseases db 'fever$$$$$','pain$$$$$$','infection$'
 qty      db 10,5,8
 price    db 5,10,20
 
-input    db 10 dup('$')
+input    db 10 dup('$')         ;allows a 10 byte input (duplicates $ 10 times)
 
 msg1  db 'Enter disease (lowercase): $'
 msg2  db 'Medicine found: $'
@@ -20,48 +19,46 @@ msg7  db 'Sorry, out of stock.$'
 msg8  db 'Purchased! Total paid: $'
 msg9  db 'Remaining quantity: $'
 msg10 db 'Thank you, goodbye.$'
-crlf  db 13,10,'$'
+crlf  db 13,10,'$'              ;clears line (endl)
 
 .code
 main:
     mov ax, @data
     mov ds, ax
 
-    ; ---- ask for disease ----
-    lea dx, msg1
+    lea dx, msg1 ;asks a disease
     mov ah, 9
     int 21h
 
-    lea di, input
+    lea di, input    ;takes input
     mov cx, 0
-read:
-    mov ah, 1
+read:                ;loop start
+    mov ah, 1        ;inputs characters
     int 21h
-    cmp al, 13          ; Enter key?
-    je done_read
-    mov [di], al
-    inc di
-    inc cx
-    cmp cx, 9           ; max 9 letters
-    jne read
+    cmp al, 13       ;enter key?
+    je done_read     ;if yes end loop
+    mov [di], al     ;if no store in buffer
+    inc di           ;move to next buffer location
+    inc cx           ;keep count
+    cmp cx, 9        ;max 9 letters
+    jne read         ;restarts the loop
 done_read:
-    lea dx, crlf
+    lea dx, crlf    
     mov ah, 9
     int 21h
 
-    ; ---- search medicines (bx = medicine number 0..2) ----
-    mov bx, 0
+    mov bx, 0      ;checks from first medicine
 search:
-    cmp bx, 3
-    je notfound
+    cmp bx, 3     
+    je notfound    ;ends loop if bx reaches 3
 
-    mov al, bl
+    mov al, bl     
     mov cl, 10
-    mul cl              ; ax = bx * 10
-    lea si, diseases
-    add si, ax
-    lea di, input
-    mov cx, 10
+    mul cl               ;each word is 10 byte so now ax holds the total byte of whichever entry loop is on (2 entry ax=20)
+    lea si, diseases     ;diseases are iterated until the one corresponding to the disease is reached
+    add si, ax           
+    lea di, input        ;gets the input in di    
+    mov cx, 10           ;starts another loop to compare di to the current disease in si
 cmp_loop:
     mov al, [si]
     cmp al, [di]
